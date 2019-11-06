@@ -24,7 +24,7 @@ namespace KS5045上位机
         public Form1()
         {
             InitializeComponent();
-            label7.Text = "C301190821";
+
         }
 
         KS5045上位机.disp_list disp = new KS5045上位机.disp_list();
@@ -38,11 +38,11 @@ namespace KS5045上位机
         byte[] info2 = new byte[200000];
         UInt16 FileSize = 0;
         byte state = 0;
-        string v1;
+        //string v1;
         UInt16 data_num = 0;
         UInt16 num_datalen = 0;
         UInt16 APP_CRC16 = 0;
-        UInt32 len_num = 0;
+        //UInt32 len_num = 0;
         public UInt16 num = 0;
         public UInt16 num_frames = 0;
         public UInt16 version_val;
@@ -54,7 +54,7 @@ namespace KS5045上位机
         KS5045上位机.CanManager loadercan;
         KS5045上位机.CanManager.VCI_CAN_OBJ[] ReceiveBuffer = new KS5045上位机.CanManager.VCI_CAN_OBJ[1000];
         int send_cnt = 0;
-        UInt32 rx_cnt;
+        //UInt32 rx_cnt;
         byte[] flash_data_arr = new byte[100];
         public string extension;
         int rev = 0;
@@ -103,7 +103,7 @@ namespace KS5045上位机
          UInt16 CRC16_Citt(UInt16 index, UInt32 length, UInt16 crc)
          {
              //UInt32 crc = 0;
-             UInt16 ii = 0;
+             //UInt16 ii = 0;
              crc = (UInt16)((UInt16)(crc << 8) ^ (UInt16)Crc16Table[((crc >> 8) ^ info2[index]) & 0x00FF]);
              return (UInt16)(crc & 0xFFFF);
          }
@@ -177,7 +177,7 @@ namespace KS5045上位机
                  " BPS：250Kbps";
                 CommStatus.Text = str_info;
                 //cmPort.Enabled = false;
-                rx_cnt = 0;
+                //rx_cnt = 0;
             }
             else
             {
@@ -328,33 +328,6 @@ namespace KS5045上位机
 
                         break;
 
-
-                    case 0x06:              //写数据
-
-                   //     TX_Data_Arr[k];
-                        //len_DLC = 8;
-                        //tx_buffer[0] = 0x51;        //目标ID
-                        //tx_buffer[1] = 0x03;        //带相应指令
-                        //tx_buffer[2] = 0xA4;        //UPDATE_PACSIZE_REG地址
-
-                        //tx_buffer[3] = 0;  
-                        
-                        //tx_buffer[4] = TX_Data_Arr[0]; 
-                        //tx_buffer[5] = TX_Data_Arr[1];
-                        //tx_buffer[6] = TX_Data_Arr[2];
-                        //tx_buffer[7] = TX_Data_Arr[3];
-
-                        break;
-
-                    case 0x07:              //写小包数
-
-
-
-
-                        break;
-
-
-
                     default:
 
                         break;
@@ -399,6 +372,7 @@ namespace KS5045上位机
 
         private void ReadFile_Click(object sender, EventArgs e)
         {
+            this.label6.Text = "读取文件中...";
             UInt16 crc16;
             string hex_info_str = string.Empty;
             string version_str = string.Empty;
@@ -426,12 +400,8 @@ namespace KS5045上位机
                     FileSize = 0;
                     StreamReader objReader = new StreamReader(fileName, System.Text.Encoding.Default);//读取文本的时候要指定编码格式,才不会出现乱码。Default为当前系统的编码格式
 
-
-
                     while (sLine != null)       //一直读到文件结束
                     {
-
-
 
                         if (state == 0)
                         {
@@ -633,19 +603,13 @@ namespace KS5045上位机
                             }
                         }
                     }
+
+                    this.label6.Text = "等待升级！";
                     int a = 0;
                     int m = 0;
                     UInt32 index = 0, lenn = 0;
 
                     FileStream fs = new FileStream("KS5045.txt", FileMode.Create);
-                    ////获得字节数组
-                    //byte[] Txtdata = System.Text.Encoding.Default.GetBytes("Hello World!");
-                    ////开始写入
-                    //fs.Write(Txtdata, 0, Txtdata.Length);
-                    ////清空缓冲区、关闭流
-                    //fs.Flush();
-                    //fs.Close();
-
 
                     for (int j = 0; j < sdata.Length / 2; j++)
                     {
@@ -692,7 +656,7 @@ namespace KS5045上位机
                     {
                         num_frame = (UInt32)(num_frame + 1);
                     }
-                    label8.Text = num_frame.ToString();
+                    TotalPack.Text = num_frame.ToString();
                 }
                 else
                 {
@@ -760,7 +724,7 @@ namespace KS5045上位机
                     {
                         num_frame = (UInt32)(num_frame + 1);
                     }
-                    label8.Text = num_frame.ToString();
+                    TotalPack.Text = num_frame.ToString();
                 }
                 if (FileSize > 65500)
                 {
@@ -821,21 +785,24 @@ namespace KS5045上位机
             Thread R2 = new Thread(DevDataProg);  //creat a new thread 然后实例化成某个函数
             R2.IsBackground = true;    //后台运行，主线程可以继续执行。一般都要开，不然主线程有些东西可能不能执行。
             R2.Start();
+
+            progressBar1.Value = 0;
         }
 
         private void DevDataProg()
         {
             UInt16 i, j;
-            byte tx_len = 0;
+            //byte tx_len = 0;
             string tmp_str = string.Empty;
-            int select_index = 0;
-            byte tx_retry = 3;
-            bool WR_rec_flag = true;
-            int ii = 0;
+            //int select_index = 0;
+            //byte tx_retry = 3;
+            //bool WR_rec_flag = true;
+            //int ii = 0;
 
             UInt16 Local_num = 0;
             byte len_DLC;
             byte ReSent_Num = 0;
+            bool En_Sent_Pack = false;
 
             while (IsUpdate)
             {
@@ -849,9 +816,12 @@ namespace KS5045上位机
                     BigPackNums++;      //有余数，说明打包还有一包未满Consts.Per_Pack_num
                 }
 
+                FrameCnt.Text = "0";
+                TotalPack.Text = Convert.ToString(BigPackNums);
 
                 if (HandShake() == 1)//握手成功
                 {
+                    En_Sent_Pack = true;
                     this.label6.Text = Convert.ToString("握手成功！");
                     Thread.Sleep(10);
                     if (extension == ".hex")
@@ -861,7 +831,8 @@ namespace KS5045上位机
 
                             for(i=0;i< BigPackNums;i++)     //大包
                             {
-                                if(i == BigPackNums-1)
+                                
+                                if (i == BigPackNums-1)
                                 {
                                     SmallPackNums = (UInt16)((sdata.Length / 2) % Consts.Per_Pack_num);
                                 }
@@ -874,7 +845,7 @@ namespace KS5045上位机
 
                                     for (byte k=0; k<4; k++)
                                     {
-                                        this.label6.Text = Convert.ToString("升级中");
+                                        //this.label6.Text = Convert.ToString("升级中");
                                         string text = sdata.Substring(Local_num, 2);
                                         Local_num += 2;
                                         TX_Data_Arr[k] = Convert.ToByte(text, 2);           //取一个字节
@@ -898,18 +869,34 @@ namespace KS5045上位机
                                     loadercan.StandardWrite(tx_buffer, len_DLC, state);
                                     CanSending = false;
 
+                                    //显示进度等信息
+
+                                    progressBar1.Value = i / BigPackNums;
+                                    FrameCnt.Text = Convert.ToString(i);
+                                    
                                     System.Threading.Thread.Sleep(20);
+
+                                    //等待是否有信息返回
 
                                     byte feedback = RecCheck();
                                     if (feedback  !=  0)      //有信息反馈回来
                                     {
                                         switch (feedback)
                                         {
+                                            //case 0x04:
+
+                                            //    En_Sent_Pack = true;
+                                            //    can_rev = 0;
+                                            //    this.label6.Text = "第" + Convert.ToString(j) + "大包烧录成功！准备发下一打包！";
+                                            //    break;
+
                                             case 0x06:          //短包计数不一致，重新发送该长包
 
                                                 j--;
                                                 ReSent_Num++;
                                                 this.label6.Text ="第" + Convert.ToString(j) +  "大包" + "第" + Convert.ToString(ReSent_Num) + "次重新发送!" ;
+
+                                                can_rev = 0;
 
                                                 if (ReSent_Num>3)
                                                 {
@@ -946,6 +933,7 @@ namespace KS5045上位机
                                                 j = (UInt16)(SmallPackNums / 4);
                                                 IsUpdate = false;
                                                 MessageBox.Show("升级失败！需重新启动！");
+                                                can_rev = 0;
                                                 break;
 
                                             case 0x09:          //校验成功
@@ -956,7 +944,7 @@ namespace KS5045上位机
                                                 IsUpdate = false;
 
                                                 MessageBox.Show("升级完成！");
-
+                                                can_rev = 0;
                                                 break;
 
                                             case 0x0A:
@@ -966,201 +954,133 @@ namespace KS5045上位机
                                                 j = (UInt16)(SmallPackNums / 4);
                                                 IsUpdate = false;
                                                 MessageBox.Show("校验失败！需重新启动！");
-
+                                                can_rev = 0;
+                                                break;
+                                            default:
                                                 break;
                                         }
                                     }
                                 }
-                            }
+                                En_Sent_Pack = false;
+                                //一个大包发完，准备发下一包，进行通信等处理
+                                timer1.Enabled = true;
 
-
-
-
-
-                            len = 0;
-                            for (i = 0; i < 3; i++)
-                            {
-                                if (sdata.Length == data_index + len)
+                                while( (En_Sent_Pack==false) && (timer1.Interval < 5000) )
                                 {
-                                    len_num = data_index + len;
-                                    tx_len += (byte)len;
-                                    break;
-                                }
-                                string text = sdata.Substring(((int)(data_index + len)), 1);
-                                len++;
-                                text += sdata.Substring(((int)(data_index + len)), 1);
-                                len++;
-                                flash_data_arr[i] = Convert.ToByte(text, 16);
-                                tx_len++;
-                            }
-
-                            write_len++;
-                            data_num++;
-                            if (data_num > 15)
-                            {
-                                data_num = 1;
-                            }
-                            FrameCnt.Invoke(new EventHandler(delegate        //委托，跨线程调用控件或函数时使用。
-                            {
-                                this.FrameCnt.Text = Convert.ToString(write_len);
-                            }));
-                            WR_rec_flag = true;
-
-                            listBox1.Invoke(new EventHandler(delegate        //委托，跨线程调用控件或函数时使用。
-                            {
-
-                                listBox1.SelectedIndex = select_index;    //  0表示选中第一行，1表示选中第二行，以此类推
-
-                                progressBar1.Value = (select_index * 100) / listBox1.Items.Count;
-                            }));
-                            if (listBox1.Items.Count > (select_index + 6))
-                            {
-                                select_index = (int)data_index / 32;
-                            }
-                            else
-                            {
-                                select_index = listBox1.Items.Count - 1;
-                            }
-                            //发送数据
-                            while (true)
-                            {
-                                can_rev = 0;
-                                state = 3;
-                                can_send(state);
-                                Thread.Sleep(10);
-                                if (can_rev == 0)
-                                {
-                                    System.Threading.Thread.Sleep(10);//缩短时间 2018_12_20  50——25
-                                    if (can_rev == 0)
+                                    while(can_rev == 0)
                                     {
-                                        System.Threading.Thread.Sleep(10);//缩短时间 2018_12_20  50——25
-                                        if (can_rev == 0)
+                                        System.Threading.Thread.Sleep(50);
+                                    }
+
+                                    byte feedback = RecCheck();
+                                    if (feedback != 0)      //有信息反馈回来
+                                    {
+                                        switch (feedback)
                                         {
-                                            System.Threading.Thread.Sleep(10);//缩短时间 2018_12_20  50——25
-                                            if (can_rev == 0)
-                                            {
-                                                System.Threading.Thread.Sleep(50);//缩短时间 2018_12_20  50——25
-                                                if (can_rev == 0)
+                                            case 0x04:
+
+                                                En_Sent_Pack = true;
+                                                //can_rev = 0;
+                                                this.label6.Text = "第" + Convert.ToString(j) + "大包烧录成功！准备发下一打包！";
+
+                                                En_Sent_Pack = true;
+                                                timer1.Enabled = false;
+
+                                                state = 4;
+                                                can_rev = 0;
+                                                can_send(state);            //发送05,开始写入大包
+
+                                                System.Threading.Thread.Sleep(50);
+
+                                                break;
+
+                                            case 0x06:          //短包计数不一致，重新发送该长包
+
+                                                j--;
+                                                ReSent_Num++;
+                                                this.label6.Text = "第" + Convert.ToString(j) + "大包" + "第" + Convert.ToString(ReSent_Num) + "次重新发送!";
+
+                                                can_rev = 0;
+
+                                                if (ReSent_Num > 3)
                                                 {
-                                                    WR_rec_flag = false;
+
+                                                    //发送一个小包
+
+                                                    len_DLC = 8;
+                                                    tx_buffer[0] = 0x51;        //目标ID
+                                                    tx_buffer[1] = 0x03;        //带相应指令
+                                                    tx_buffer[2] = 0xA3;        //UPDATE_PACSIZE_REG地址
+                                                    tx_buffer[3] = 0x07;        //通知从机通信失败，需要重启
+                                                    tx_buffer[4] = 0x00;
+                                                    tx_buffer[5] = 0x00;
+                                                    tx_buffer[6] = 0x00;
+                                                    tx_buffer[7] = 0x00;
+
+                                                    state = 6;
+                                                    loadercan.StandardWrite(tx_buffer, len_DLC, state);
+                                                    CanSending = false;
+
+                                                    //处理相应数据，退出烧录
+                                                    i = BigPackNums;
+                                                    j = (UInt16)(SmallPackNums / 4);
+                                                    IsUpdate = false;
+                                                    MessageBox.Show("升级失败！需重新启动！");
                                                 }
-                                            }
+
+                                                break;
+
+                                            case 0x07:          //重新发送超过3次，进入下一次重启
+
+                                                //处理相应数据，退出烧录
+                                                i = BigPackNums;
+                                                j = (UInt16)(SmallPackNums / 4);
+                                                IsUpdate = false;
+                                                MessageBox.Show("升级失败！需重新启动！");
+                                                can_rev = 0;
+                                                break;
+
+                                            case 0x09:          //校验成功
+
+                                                //处理相应数据，退出烧录
+                                                i = BigPackNums;
+                                                j = (UInt16)(SmallPackNums / 4);
+                                                IsUpdate = false;
+
+                                                MessageBox.Show("升级完成！");
+                                                can_rev = 0;
+                                                break;
+
+                                            case 0x0A:
+
+                                                //处理相应数据，退出烧录
+                                                i = BigPackNums;
+                                                j = (UInt16)(SmallPackNums / 4);
+                                                IsUpdate = false;
+                                                MessageBox.Show("校验失败！需重新启动！");
+                                                can_rev = 0;
+                                                break;
+
+                                            default:
+                                                break;
+
                                         }
                                     }
+
                                 }
-                                if (WR_rec_flag == true)
+
+                                if (timer1.Interval >= 5000)       //等待超过5秒，复位？
                                 {
-                                    if (IsAppWriteRespondOk() == 0)//数据返回确认
-                                    {
-                                        WR_rec_flag = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    WR_rec_flag = true;
-                                }
-                                can_rev = 0;
-                                if (tx_retry > 0)
-                                {
-                                    tx_retry--;
-                                }
-                                else
-                                {
+                                    i = BigPackNums;
+                                    j = (UInt16)(SmallPackNums / 4);
                                     IsUpdate = false;
-                                    MessageBox.Show("第" + FrameCnt.Text.ToString() + "帧写入失败!");
-                                    buttonOTA.Invoke(new EventHandler(delegate        //委托，跨线程调用控件或函数时使用。
-                                    {
-                                        buttonOTA.Enabled = true;
-                                    }));
-                                    data_index = 0;
-                                    state = 0;
-                                    send_cnt = 0;
-                                    return;
+                                    MessageBox.Show("等待烧录大包超时5秒！需重新启动！");
+                                    can_rev = 0;
+                                    timer1.Enabled = false;
                                 }
+   
+
                             }
-                            tx_retry = 3;
-                            tx_len = 0;
-                            if (sdata.Length == data_index)
-                            {
-                                break;
-                            }
-                        }
-                        for (i = 0; i < 3;i++ )
-                        {
-                            rev = 0;
-                            state = 4;
-                            can_send(state);
-                            System.Threading.Thread.Sleep(5000);
-                            if (rev == 1)
-                            {
-                                if (ISreturnok() == 0)
-                                {
-                                    break;
-                                }
-                                else
-                                {
-                                    buttonOTA.Invoke(new EventHandler(delegate        //委托，跨线程调用控件或函数时使用。
-                                    {
-                                        buttonOTA.Enabled = true;
-                                    }));
-                                    state = 0;
-                                    data_index = 0;
-                                    send_cnt = 0;
-                                }
-                            }
-                            Thread.Sleep(50);
-                        }
-                        if (i == 3)
-                        {
-                            IsUpdate = false;
-                            MessageBox.Show("文件结束包没有回复！");
-                            buttonOTA.Invoke(new EventHandler(delegate        //委托，跨线程调用控件或函数时使用。
-                            {
-                                buttonOTA.Enabled = true;
-                            }));
-                            data_index = 0;
-                            state = 0;
-                            send_cnt = 0;
-                            return;
-                        }
-                        
-                        //校验升级结束
-                        for (i = 0; i < 3; i++)
-                        {
-                            rev = 0;
-                            state = 5;
-                            can_send(state);
-                            System.Threading.Thread.Sleep(2000);
-                            if (rev == 1)
-                            {
-                                if (IsFlashWriteSuccess() == 0)
-                                {
-                                    MessageBox.Show("成功，升级完成！");
-                                    IsUpdate = false;
-                                    buttonOTA.Invoke(new EventHandler(delegate        //委托，跨线程调用控件或函数时使用。
-                                    {
-                                        buttonOTA.Enabled = true;
-                                    }));
-                                    data_index = 0;
-                                    state = 0;
-                                    send_cnt = 0;
-                                    return;
-                                }
-                            }
-                        }
-                        if (i == 3)
-                        {
-                            IsUpdate = false;
-                            MessageBox.Show("确认升级失败");
-                            buttonOTA.Invoke(new EventHandler(delegate        //委托，跨线程调用控件或函数时使用。
-                            {
-                                buttonOTA.Enabled = true;
-                            }));
-                            state = 0;
-                            data_index = 0;
-                            send_cnt = 0;
-                            return;
                         }
                     }
                 }
@@ -1191,7 +1111,12 @@ namespace KS5045上位机
 
             if (can_rev == 1)           //检测是否有收到反馈的异常等信息
             {
-                if ((Can_Rev_Buf[0] == 0x00) && (Can_Rev_Buf[1] == 0x04) && (Can_Rev_Buf[2] == 0xA3) && (Can_Rev_Buf[3] == 0x06))
+                if ((Can_Rev_Buf[0] == 0x00) && (Can_Rev_Buf[1] == 0x04) && (Can_Rev_Buf[2] == 0xA3) && (Can_Rev_Buf[3] == 0x04))
+                {
+                    can_rev = 0;
+                    return 4;        //一包烧录完成，请求发送下一长包     
+                }
+                else if ((Can_Rev_Buf[0] == 0x00) && (Can_Rev_Buf[1] == 0x04) && (Can_Rev_Buf[2] == 0xA3) && (Can_Rev_Buf[3] == 0x06))
                 {
                     can_rev = 0;
                     return 6;        //接收短包计数不一致，请求重新发送长包     
